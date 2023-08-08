@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "239455849625",
+    "firebase_url": "https://funs-33f40-default-rtdb.firebaseio.com",
+    "project_id": "funs-33f40",
+    "storage_bucket": "funs-33f40.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:239455849625:android:190dda92b99206c9793c08",
+        "android_client_info": {
+          "package_name": "com.example.fispawn"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "239455849625-8jum0smlie4iige7qqk70ftiugmpjmj6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSRnsVF0z0vbSc8O3VfNjY3J5zlwpiieY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "239455849625-4fh7ejo6b039n7se1irig37jq6gu12gc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
