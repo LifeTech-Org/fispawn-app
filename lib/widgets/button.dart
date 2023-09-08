@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+typedef FutureFunction = Future<dynamic?> Function();
 class MyButton extends StatelessWidget {
-  const MyButton(
-      {super.key,
-      required this.title,
-      required this.function,
-      required this.isDanger});
+  const MyButton({
+    super.key,
+    required this.title,
+    required this.function,
+    required this.isDanger,
+  });
   final String title;
   final Function function;
   final bool isDanger;

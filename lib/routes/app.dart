@@ -27,7 +27,10 @@ class App extends StatelessWidget {
         } else if (snapshot.hasData) {
           return Home();
         } else {
-          return const MyScaffold(widget: SignIn());
+          return const MyScaffold(
+            body: SignIn(),
+            appBarTitle: 'Sign In',
+          );
         }
       },
     );

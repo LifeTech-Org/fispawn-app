@@ -23,6 +23,7 @@ class FIS {
     required this.id,
     required this.category,
     required this.status,
+    required this.isMember,
     required this.isAuthor,
     required this.activeSessionId,
     required this.author,
@@ -31,6 +32,7 @@ class FIS {
   String id;
   String category;
   FISStatus status;
+  bool isMember;
   bool isAuthor;
   String activeSessionId;
   Player author;
@@ -41,6 +43,7 @@ class FIS {
       id: data['id']!,
       category: data['category'],
       status: getFISStatusFromString(data['status']!),
+      isMember: data['isMember'],
       isAuthor: data['isAuthor'],
       activeSessionId: data['activeSessionId'],
       author: Player.fromJSON(data['author']),
@@ -52,26 +55,29 @@ class FIS {
 }
 
 class Player {
-  Player({
-    required this.uid,
-    required this.displayName,
-    this.photoURL,
-    this.isAuthor,
-    this.isMe,
-  });
+  Player(
+      {required this.uid,
+      required this.displayName,
+      this.photoURL,
+      required this.isAuthor,
+      required this.isMe,
+      this.ready = false});
   String uid;
   String displayName;
   String? photoURL;
   bool? isAuthor;
   bool? isMe;
+  bool? ready;
 
   factory Player.fromJSON(Map<String, dynamic> data) {
+    print(data);
     return Player(
-      uid: data['uid']!,
-      displayName: data['displayName']!,
-      photoURL: data['photURL'],
+      uid: data['uid'],
+      displayName: data['displayName'],
+      photoURL: data['photoURL'],
       isAuthor: data['isAuthor'],
       isMe: data['isMe'],
+      ready: data['ready'] ?? false,
     );
   }
 }

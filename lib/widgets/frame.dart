@@ -1,23 +1,15 @@
 import 'package:flutter/material.dart';
 
 class Frame extends StatelessWidget {
-  const Frame({
-    super.key,
-    required this.body,
-    required this.appBarTitle,
-  });
+  const Frame({super.key, required this.body});
   final Widget body;
-  final String appBarTitle;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(appBarTitle),
-        leading: IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.navigate_before_rounded)),
-      ),
-      body: body,
+    return Container(
+      padding: const EdgeInsets.all(10),
+      width: double.infinity,
+      child: body,
     );
   }
 }

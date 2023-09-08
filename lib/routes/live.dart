@@ -1,64 +1,75 @@
-import 'dart:async';
 import 'dart:convert';
+
+import 'package:fispawn/models/fis.dart';
+import 'package:fispawn/pages/lobby.dart';
 import 'package:flutter/material.dart';
 import 'package:fispawn/interface/server.dart';
-import 'package:fispawn/models/fis.dart';
-import 'package:universal_html/html.dart' as html;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fispawn/widgets/scaffold.dart';
+import 'package:web_socket_channel/io.dart';
+import 'dart:async';
 
 class LiveFIS extends StatefulWidget {
-  const LiveFIS({super.key});
-
+  const LiveFIS({super.key, required this.fis});
+  final FIS fis;
   @override
   State<LiveFIS> createState() => _LiveFISState();
 }
 
 class _LiveFISState extends State<LiveFIS> {
-  StreamController<FISSession> sseStreamController = StreamController();
-
-  html.EventSource? eventSource;
   final server = Server();
-
-  void connectToSSE() async {
-    try {
-      eventSource = await server
-          .connectToEventSouce(uri: 'session', queries: {"fisid": "sduhuf"});
-
-      eventSource!.onMessage.listen((event) {
-        print("Session received message");
-        sseStreamController.add(FISSession.fromJSON(json.decode(event.data!)));
-      });
-    } catch (e) {
-      print(e);
-      // sseStreamController.addError(Error());
-    }
-  }
-
+  final user = FirebaseAuth.instance.currentUser;
+  StreamController controller = StreamController();
+  late IOWebSocketChannel socket;
   @override
   void initState() {
-    connectToSSE();
+    user!.getIdToken().then((idToken) {
+      if (idToken != null) {
+        socket = server.socket(
+            {"fisid": widget.fis.id, "idToken": idToken, "type": "session"});
+        controller.addStream(socket.stream);
+      }
+    });
     super.initState();
   }
 
   @override
   void dispose() {
-    eventSource?.close();
-    print("session ended");
+    controller.close();
+    socket.sink.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream: sseStreamController.stream,
+      stream: controller.stream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: Text('Waiting for data'));
+          return const MyScaffold(
+              body: Center(child: CircularProgressIndicator()),
+              appBarTitle: 'Loading Session');
         } else if (snapshot.hasError) {
-          return const Center(
-            child: Text('Something went wrong'),
-          );
+          return const MyScaffold(
+              body: Center(
+                child: Text('Something went wrong'),
+              ),
+              appBarTitle: 'Error in session');
         } else {
-          return const Center(child: Text('Hmmm'));
+          final session =
+              FISSession.fromJSON(json.decode(snapshot.data!)['data']);
+          if (session.start) {
+            return const MyScaffold(
+                body: Center(child: Text('Hmmm')), appBarTitle: 'Started FIS');
+          } else {
+            return MyScaffold(
+                body: Center(
+                    child: Lobby(
+                        isAuthor: widget.fis.isAuthor,
+                        fisid: widget.fis.id,
+                        players: session.players)),
+                appBarTitle: 'Session waitng for');
+          }
         }
       },
     );

@@ -6,6 +6,7 @@ import 'package:fispawn/routes/fis.dart';
 import 'package:flutter/material.dart';
 import 'package:fispawn/interface/server.dart';
 import 'package:provider/provider.dart';
+import 'package:fispawn/widgets/list_tile.dart';
 
 class Home extends StatelessWidget {
   Home({super.key});
@@ -74,9 +75,19 @@ class Home extends StatelessWidget {
                 shrinkWrap: true,
                 controller: _xController,
                 itemBuilder: (context, index) {
-                  return const Row(
+                  return Row(
                     children: [
-                      RecentFispawnContainer(),
+                      InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    MyFIS(fisid: 'IZei9pUDHuraLueGbwpa'),
+                              ),
+                            );
+                          },
+                          child: RecentFispawnContainer()),
                       SizedBox(
                         width: 10,
                       )
@@ -304,122 +315,84 @@ class CategoryContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isActive = workingIndex == index && isLoading;
-    return InkWell(
-      onTap: () {
-        if (isLoading) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Please wait.'),
+    void onTap() {
+      if (isLoading) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please wait.'),
+          ),
+        );
+      } else {
+        setWorkingStatus(index, true);
+      }
+    }
+
+    return isActive
+        ? FutureBuilder(
+            future: server.createNewFIS(name),
+            builder: ((context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return MyListTile(
+                  text: 'Working on it...',
+                  trailing: const CircularProgressIndicator(),
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please wait.'),
+                      ),
+                    );
+                  },
+                );
+              } else if (snapshot.hasError) {
+                return const MyListTile(
+                  text: 'Error occured',
+                  trailing: Icon(Icons.error),
+                );
+              } else {
+                final fisid = snapshot.data;
+                Future.delayed(const Duration(seconds: 1), () {
+                  setWorkingStatus(null, false);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MyFIS(fisid: fisid!),
+                    ),
+                  );
+                });
+                return MyListTile(
+                    text: 'Done',
+                    trailing: const Icon(Icons.done),
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Redirecting you in a bit'),
+                        ),
+                      );
+                    });
+              }
+            }))
+        : MyListTile(
+            onTap: onTap,
+            text: name,
+            trailing: Row(
+              children: [
+                Container(
+                  height: 30,
+                  width: 30,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(2000),
+                    color: Colors.white,
+                  ),
+                  child: Center(
+                    child: Text('$noOfParticipants'),
+                  ),
+                ),
+                const Icon(
+                  Icons.navigate_next,
+                  color: Colors.white,
+                ),
+              ],
             ),
           );
-        } else {
-          setWorkingStatus(index, true);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(10.0),
-        margin: const EdgeInsets.symmetric(
-          vertical: 5,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade900,
-          border: Border.all(
-            color: Colors.grey.shade800,
-            width: 1,
-          ),
-        ),
-        child: isActive
-            ? Row(
-                children: [
-                  Expanded(
-                    child: FutureBuilder(
-                      future: server.createNewFIS(name),
-                      builder: ((context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  'Working on it, please wait',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                              CircularProgressIndicator(),
-                            ],
-                          );
-                        } else if (snapshot.hasError) {
-                          Future.delayed(Duration(seconds: 1), () {
-                            setIsLoading(false);
-                          });
-                          return const Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  'Something went wrong',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                              Icon(Icons.error),
-                            ],
-                          );
-                        } else {
-                          Future.delayed(Duration(seconds: 1), () {
-                            setWorkingStatus(null, false);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const MyFIS(),
-                              ),
-                            );
-                          });
-                          return const Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  'Done',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                              Icon(Icons.done),
-                            ],
-                          );
-                        }
-                      }),
-                    ),
-                  ),
-                  Icon(
-                    Icons.navigate_next,
-                    color: Colors.white,
-                  )
-                ],
-              )
-            : Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      name,
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  Container(
-                    height: 30,
-                    width: 30,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2000),
-                      color: Colors.white,
-                    ),
-                    child: Center(
-                      child: Text('$noOfParticipants'),
-                    ),
-                  ),
-                  Icon(
-                    Icons.navigate_next,
-                    color: Colors.white,
-                  ),
-                ],
-              ),
-      ),
-    );
   }
 }
