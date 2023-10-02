@@ -3,8 +3,8 @@ import 'package:fispawn/interface/server.dart';
 
 typedef FutureFunction = Future<void> Function();
 
-class AsyncButton extends StatefulWidget {
-  const AsyncButton({
+class AsyncButtonNoDialog extends StatefulWidget {
+  const AsyncButtonNoDialog({
     super.key,
     required this.action,
     this.callback,
@@ -16,10 +16,10 @@ class AsyncButton extends StatefulWidget {
   final String title;
   final bool isDanger;
   @override
-  State<AsyncButton> createState() => _AsyncButtonState();
+  State<AsyncButtonNoDialog> createState() => _AsyncButtonNoDialogState();
 }
 
-class _AsyncButtonState extends State<AsyncButton> {
+class _AsyncButtonNoDialogState extends State<AsyncButtonNoDialog> {
   ConnectionState state = ConnectionState.waiting;
   final Server server = Server();
   void changeState(ConnectionState newState) {

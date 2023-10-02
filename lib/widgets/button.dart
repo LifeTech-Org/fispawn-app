@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-typedef FutureFunction = Future<dynamic?> Function();
 class MyButton extends StatelessWidget {
   const MyButton({
     super.key,

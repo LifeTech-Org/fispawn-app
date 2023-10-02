@@ -242,24 +242,13 @@ class _CategoriesListState extends State<CategoriesList> {
   int? workingIndex;
   bool isLoading = false;
 
-  void setWorkingIndex(int? newWorkingIndex) {
-    setState(() {
-      workingIndex = newWorkingIndex;
-    });
-  }
-
   void setIsLoading(bool newIsLoading) {
     setState(() {
       isLoading = newIsLoading;
     });
   }
 
-  void setWorkingStatus(int? newWorkingIndex, bool newIsLoading) {
-    setState(() {
-      workingIndex = newWorkingIndex;
-      isLoading = newIsLoading;
-    });
-  }
+  final Server server = Server();
 
   @override
   Widget build(BuildContext context) {
@@ -269,130 +258,37 @@ class _CategoriesListState extends State<CategoriesList> {
       itemCount: widget.categories.length,
       itemBuilder: ((context, index) {
         final category = widget.categories.elementAt(index);
-        return CategoryContainer(
-          name: category.name,
-          imgURL: category.imgURL,
-          noOfParticipants: category.noOfParticipants,
-          workingIndex: workingIndex,
-          setWorkingIndex: setWorkingIndex,
-          setIsLoading: setIsLoading,
-          setWorkingStatus: setWorkingStatus,
-          index: index,
-          isLoading: isLoading,
+        return MyListTile(
+          text: category.name,
+          errorMessage: 'Fail to create game',
+          init: () => setIsLoading(true),
+          function: isLoading ? null : () => server.createNewFIS(category.name),
+          successCallBack: (fisid) {
+            setIsLoading(false);
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => MyFIS(fisid: fisid)));
+          },
+          trailing: Row(
+            children: [
+              Container(
+                height: 30,
+                width: 30,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(2000),
+                  color: Colors.white,
+                ),
+                child: Center(
+                  child: Text('${category.noOfParticipants}'),
+                ),
+              ),
+              const Icon(
+                Icons.navigate_next,
+                color: Colors.white,
+              ),
+            ],
+          ),
         );
       }),
     );
-  }
-}
-
-typedef MyFunctionInt = void Function(int?);
-typedef MyFunctionBool = void Function(bool);
-typedef MyFunction = void Function(int?, bool);
-
-class CategoryContainer extends StatelessWidget {
-  CategoryContainer({
-    super.key,
-    required this.name,
-    required this.imgURL,
-    required this.noOfParticipants,
-    required this.setWorkingIndex,
-    required this.setIsLoading,
-    required this.setWorkingStatus,
-    required this.workingIndex,
-    required this.index,
-    required this.isLoading,
-  });
-  final String name;
-  final String imgURL;
-  final int noOfParticipants;
-  final MyFunctionInt setWorkingIndex;
-  final MyFunctionBool setIsLoading;
-  final MyFunction setWorkingStatus;
-  final int? workingIndex;
-  final int index;
-  final bool isLoading;
-  final Server server = Server();
-  @override
-  Widget build(BuildContext context) {
-    final isActive = workingIndex == index && isLoading;
-    void onTap() {
-      if (isLoading) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please wait.'),
-          ),
-        );
-      } else {
-        setWorkingStatus(index, true);
-      }
-    }
-
-    return isActive
-        ? FutureBuilder(
-            future: server.createNewFIS(name),
-            builder: ((context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return MyListTile(
-                  text: 'Working on it...',
-                  trailing: const CircularProgressIndicator(),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please wait.'),
-                      ),
-                    );
-                  },
-                );
-              } else if (snapshot.hasError) {
-                return const MyListTile(
-                  text: 'Error occured',
-                  trailing: Icon(Icons.error),
-                );
-              } else {
-                final fisid = snapshot.data;
-                Future.delayed(const Duration(seconds: 1), () {
-                  setWorkingStatus(null, false);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MyFIS(fisid: fisid!),
-                    ),
-                  );
-                });
-                return MyListTile(
-                    text: 'Done',
-                    trailing: const Icon(Icons.done),
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Redirecting you in a bit'),
-                        ),
-                      );
-                    });
-              }
-            }))
-        : MyListTile(
-            onTap: onTap,
-            text: name,
-            trailing: Row(
-              children: [
-                Container(
-                  height: 30,
-                  width: 30,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(2000),
-                    color: Colors.white,
-                  ),
-                  child: Center(
-                    child: Text('$noOfParticipants'),
-                  ),
-                ),
-                const Icon(
-                  Icons.navigate_next,
-                  color: Colors.white,
-                ),
-              ],
-            ),
-          );
   }
 }

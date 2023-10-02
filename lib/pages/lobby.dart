@@ -1,4 +1,5 @@
 import 'package:fispawn/models/fis.dart';
+import 'package:fispawn/widgets/dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:fispawn/widgets/list_tile.dart';
 import "package:fispawn/interface/server.dart";
@@ -40,11 +41,25 @@ class Lobby extends StatelessWidget {
                 final player = players.elementAt(index);
                 return MyListTile(
                     text: player.displayName,
-                    trailing: ReadyButton(
-                      onTap: player.isMe!
-                          ? () => server.changeReadyStatus(fisid)
-                          : null,
-                    ));
+                    trailing: player.isMe!
+                        ? AsyncActionButton(
+                            onTap: () => server.changeReadyStatus(fisid),
+                            text: player.ready! ? "Ready" : "Not Ready",
+                            successText: "You changed status successfully",
+                            errorText: "Couldnt change status")
+                        : (isAuthor
+                            ? ActionButton(
+                                text: 'Remove Player',
+                                action: () =>
+                                    server.removePlayer(fisid, player.uid),
+                                dialogContent:
+                                    'Are you sure you want to remove player?',
+                                dialogActionText: 'Remove Player',
+                                dialogActionSuccessText:
+                                    'Player removed successfully',
+                                dialogActionErrorText: 'Error removing player',
+                              )
+                            : null));
               }),
           const SizedBox(height: 20),
         ],
@@ -55,17 +70,23 @@ class Lobby extends StatelessWidget {
 
 typedef FutureFunction = Future<void> Function();
 
-class ReadyButton extends StatefulWidget {
-  const ReadyButton({
+class AsyncActionButton extends StatefulWidget {
+  const AsyncActionButton({
     super.key,
     required this.onTap,
+    required this.text,
+    required this.successText,
+    required this.errorText,
   });
   final FutureFunction? onTap;
+  final String text;
+  final String successText;
+  final String errorText;
   @override
-  State<ReadyButton> createState() => _ReadyButtonState();
+  State<AsyncActionButton> createState() => _AsyncActionButtonState();
 }
 
-class _ReadyButtonState extends State<ReadyButton> {
+class _AsyncActionButtonState extends State<AsyncActionButton> {
   ConnectionState state = ConnectionState.waiting;
   void changeState(ConnectionState newState) {
     setState(() {
@@ -77,11 +98,14 @@ class _ReadyButtonState extends State<ReadyButton> {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        if (widget.onTap != null) {
+        if (state == ConnectionState.waiting) {
+          changeState(ConnectionState.active);
           widget.onTap!().then((value) {
             ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text('You changed to ready')));
+                .showSnackBar(SnackBar(content: Text(widget.successText)));
           }).catchError((e) {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(widget.errorText)));
             changeState(ConnectionState.waiting);
           });
         }
@@ -92,8 +116,55 @@ class _ReadyButtonState extends State<ReadyButton> {
           borderRadius: BorderRadius.circular(10),
           color: Colors.orange.shade800,
         ),
-        child: const Center(
-          child: Text('Ready', style: TextStyle(fontSize: 15)),
+        child: Center(
+          child: state == ConnectionState.waiting
+              ? Text(widget.text, style: TextStyle(fontSize: 15))
+              : const CircularProgressIndicator(),
+        ),
+      ),
+    );
+  }
+}
+
+class ActionButton extends StatelessWidget {
+  const ActionButton({
+    super.key,
+    required this.text,
+    required this.action,
+    required this.dialogContent,
+    required this.dialogActionText,
+    required this.dialogActionSuccessText,
+    required this.dialogActionErrorText,
+  });
+  final String text;
+  final String dialogContent;
+  final String dialogActionText;
+  final String dialogActionSuccessText;
+  final String dialogActionErrorText;
+  final FutureFunction action;
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (context) => MyDialog(
+            content: dialogContent,
+            action: action,
+            actionText: dialogActionText,
+            actionSuccessText: dialogActionSuccessText,
+            actionErrorText: dialogActionErrorText,
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: Colors.orange.shade800,
+        ),
+        child: Center(
+          child: Text(text),
         ),
       ),
     );

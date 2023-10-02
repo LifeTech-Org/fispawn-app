@@ -1,7 +1,8 @@
+import 'package:fispawn/widgets/buttons/async_button_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:fispawn/widgets/list_tile.dart';
 import 'package:fispawn/models/fis.dart';
-import 'package:fispawn/widgets/async_button.dart';
+import 'package:fispawn/widgets/buttons/async_button_no_dialog.dart';
 import "package:fispawn/interface/server.dart";
 
 class Waiting extends StatelessWidget {
@@ -22,10 +23,16 @@ class Waiting extends StatelessWidget {
           },
         ),
         fis.isAuthor
-            ? AsyncButton(
-                title: 'Start',
+            ? AsyncButtonWithDialog(
                 isDanger: false,
-                action: () => server.addNewSession(fis.id))
+                text: 'Start Fispawn',
+                action: () => server.addNewSession(fis.id),
+                dialogContent:
+                    'Do you want to start? People wont be able to join again.',
+                dialogActionText: 'Start now',
+                dialogActionSuccessText: 'Fispawn started successfully',
+                dialogActionErrorText: 'Couldnt start',
+              )
             : const SizedBox()
       ],
     );
