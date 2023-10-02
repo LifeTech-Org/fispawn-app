@@ -5,11 +5,12 @@ import 'package:fispawn/widgets/list_tile.dart';
 import "package:fispawn/interface/server.dart";
 
 class Lobby extends StatelessWidget {
-  Lobby(
-      {super.key,
-      required this.players,
-      required this.isAuthor,
-      required this.fisid});
+  Lobby({
+    super.key,
+    required this.players,
+    required this.isAuthor,
+    required this.fisid,
+  });
   final List<Player> players;
   final bool isAuthor;
   final _controller = ScrollController();
@@ -164,7 +165,10 @@ class ActionButton extends StatelessWidget {
           color: Colors.orange.shade800,
         ),
         child: Center(
-          child: Text(text),
+          child: Text(
+            text,
+            style: const TextStyle(color: Colors.white),
+          ),
         ),
       ),
     );

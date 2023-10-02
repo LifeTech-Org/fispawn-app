@@ -1,6 +1,6 @@
 enum FISStatus { waiting, ended, live, cancelled }
 
-FISStatus getFISStatusFromString(String status) {
+FISStatus stringToFISStatus(String status) {
   FISStatus result = FISStatus.waiting;
   switch (status) {
     case 'ended':
@@ -13,6 +13,31 @@ FISStatus getFISStatusFromString(String status) {
 
     case 'cancelled':
       result = FISStatus.cancelled;
+      break;
+
+    case 'waiting':
+      result = FISStatus.waiting;
+      break;
+  }
+  return result;
+}
+
+String fisStatusToString(FISStatus status) {
+  String result = "";
+  switch (status) {
+    case FISStatus.ended:
+      result = "ended";
+      break;
+
+    case FISStatus.live:
+      result = "live";
+      break;
+
+    case FISStatus.cancelled:
+      result = "cancelled";
+      break;
+    case FISStatus.waiting:
+      result = "waiting";
       break;
   }
   return result;
@@ -42,7 +67,7 @@ class FIS {
     return FIS(
       id: data['id']!,
       category: data['category'],
-      status: getFISStatusFromString(data['status']!),
+      status: stringToFISStatus(data['status']!),
       isMember: data['isMember'],
       isAuthor: data['isAuthor'],
       activeSessionId: data['activeSessionId'],

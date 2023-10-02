@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:fispawn/models/fis.dart';
 import 'package:fispawn/pages/lobby.dart';
+import 'package:fispawn/pages/play.dart';
 import 'package:flutter/material.dart';
 import 'package:fispawn/interface/server.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -59,8 +60,9 @@ class _LiveFISState extends State<LiveFIS> {
           final session =
               FISSession.fromJSON(json.decode(snapshot.data!)['data']);
           if (session.start) {
-            return const MyScaffold(
-                body: Center(child: Text('Hmmm')), appBarTitle: 'Started FIS');
+            return MyScaffold(
+                body: MyPlay(session: session, fis: widget.fis),
+                appBarTitle: 'Started FIS');
           } else {
             return MyScaffold(
                 body: Center(

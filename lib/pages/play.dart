@@ -1,8 +1,10 @@
 import 'package:fispawn/models/fis.dart';
+import 'package:fispawn/pages/lobby.dart';
 import 'package:fispawn/widgets/button.dart';
 import 'package:flutter/material.dart';
 import 'package:fispawn/widgets/chip.dart';
 import 'package:fispawn/utils/keys.dart';
+import "package:fispawn/interface/server.dart";
 
 class MyPlay extends StatelessWidget {
   const MyPlay({super.key, required this.session, required this.fis});
@@ -10,12 +12,16 @@ class MyPlay extends StatelessWidget {
   final FIS fis;
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        ScoreBoard(stats: session.stats, players: session.players),
-        PlayColumn(session: session),
-        FISActions(fis: fis),
-      ],
+    return Container(
+      color: Colors.black,
+      width: double.infinity,
+      child: Column(
+        children: [
+          ScoreBoard(stats: session.stats, players: session.players),
+          PlayColumn(session: session),
+          FISActions(fis: fis),
+        ],
+      ),
     );
   }
 }
@@ -26,15 +32,24 @@ class ScoreBoard extends StatelessWidget {
   final List<Player> players;
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      scrollDirection: Axis.horizontal,
-      itemCount: stats.length,
-      itemBuilder: ((context, index) {
-        final stat = stats.elementAt(index);
-        final player = players.firstWhere((player) => player.uid == stat.uid);
-        return MyChip(
-            counts: stat.counts, wins: stat.wins, photoURL: player.photoURL!);
-      }),
+    return Padding(
+      padding: const EdgeInsets.all(10),
+      child: SizedBox(
+        height: 50,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: stats.length,
+          itemBuilder: ((context, index) {
+            final stat = stats.elementAt(index);
+            final player =
+                players.firstWhere((player) => player.uid == stat.uid);
+            return MyChip(
+                counts: stat.counts,
+                wins: stat.wins,
+                photoURL: player.photoURL!);
+          }),
+        ),
+      ),
     );
   }
 }
@@ -59,17 +74,19 @@ class _PlayColumnState extends State<PlayColumn> {
   @override
   Widget build(BuildContext context) {
     final disableKeyboard = tmpSpawn.length >= 5;
-    return Column(
-      children: [
-        Spawns(plays: widget.session.plays, tmpSpawn: tmpSpawn),
-        Keyboard(
-          meaning: widget.session.spawn.meaning,
-          disabled: disableKeyboard,
-          setTmpSpawn: setTmpSpawn,
-          isWon: widget.session.winner != null,
-          tmpSpawn: tmpSpawn,
-        )
-      ],
+    return Expanded(
+      child: Column(
+        children: [
+          Spawns(plays: widget.session.plays, tmpSpawn: tmpSpawn),
+          Keyboard(
+            meaning: widget.session.spawn.meaning,
+            disabled: disableKeyboard,
+            setTmpSpawn: setTmpSpawn,
+            isWon: widget.session.winner != null,
+            tmpSpawn: tmpSpawn,
+          )
+        ],
+      ),
     );
   }
 }
@@ -81,7 +98,7 @@ class Spawns extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Current Index rep index of where I can edit now
-    final currentIndex = plays.length;
+    final currentIndex = plays.isEmpty ? 0 : plays.length - 1;
     return Column(
       children: List.generate(
         5,
@@ -90,12 +107,14 @@ class Spawns extends StatelessWidget {
             5,
             (xIndex) {
               return SpawnChar(
-                type: (currentIndex >= yIndex
+                type: (yIndex >= currentIndex
                     ? MatchType.noMatch
                     : plays[yIndex][xIndex].type),
-                char: currentIndex < yIndex
+                char: yIndex < currentIndex
                     ? plays[yIndex][xIndex].char
-                    : (currentIndex == yIndex ? tmpSpawn[xIndex] : ""),
+                    : (currentIndex == yIndex
+                        ? (xIndex < tmpSpawn.length ? tmpSpawn[xIndex] : "")
+                        : ""),
               );
             },
           ).toList(),
@@ -112,7 +131,23 @@ class SpawnChar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Container(
+      height: 60,
+      width: 60,
+      decoration: BoxDecoration(
+        color: type == MatchType.exactMatch
+            ? Colors.green.shade400
+            : (type == MatchType.noMatch
+                ? Colors.transparent
+                : Colors.orange.shade400),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade900, width: 2.0),
+      ),
+      child: Text(
+        char,
+        style: TextStyle(color: Colors.white),
+      ),
+    );
   }
 }
 
@@ -143,7 +178,7 @@ class Keyboard extends StatelessWidget {
                     text: key,
                     action: () {
                       if (!disabled) {
-                        setTmpSpawn(key);
+                        setTmpSpawn(tmpSpawn + key);
                       }
                     },
                   ))
@@ -156,7 +191,7 @@ class Keyboard extends StatelessWidget {
                     text: key,
                     action: () {
                       if (!disabled) {
-                        setTmpSpawn(key);
+                        setTmpSpawn(tmpSpawn + key);
                       }
                     },
                   ))
@@ -198,25 +233,48 @@ class MyKey extends StatelessWidget {
     return InkWell(
       onTap: action,
       child: Container(
-        decoration: BoxDecoration(),
-        child: Text(text),
+        height: 30,
+        width: 30,
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: Colors.grey.shade900, width: 2.0)),
+        child: Text(
+          text,
+          style: TextStyle(color: Colors.white),
+        ),
       ),
     );
   }
 }
 
 class FISActions extends StatelessWidget {
-  const FISActions({super.key, required this.fis});
+  FISActions({super.key, required this.fis});
   final FIS fis;
+  final server = Server();
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: fis.isAuthor
-          ? [
-              MyButton(title: 'End Fispawn', function: () {}, isDanger: true),
-              MyButton(title: 'Respawn', function: () {}, isDanger: false)
-            ]
-          : [MyButton(title: 'Leave Fispawn', function: () {}, isDanger: true)],
+    return Padding(
+      padding: const EdgeInsets.all(10),
+      child: Row(
+        children: fis.isAuthor
+            ? [
+                ActionButton(
+                  text: 'End Fispawn',
+                  action: () => server.changeStatus(fis.id, FISStatus.ended),
+                  dialogContent: 'Are you sure you want to nd Fispawn?',
+                  dialogActionText: 'End Fispawn',
+                  dialogActionSuccessText: 'Fispawn Ended Successfully',
+                  dialogActionErrorText: 'Something went wrong',
+                ),
+                const SizedBox(width: 10),
+                MyButton(
+                    title: 'Restart Fispawn', function: () {}, isDanger: false),
+              ]
+            : [
+                MyButton(
+                    title: 'Leave Fispawn', function: () {}, isDanger: true)
+              ],
+      ),
     );
   }
 }

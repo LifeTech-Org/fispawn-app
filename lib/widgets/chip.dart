@@ -13,7 +13,7 @@ class MyChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Image.asset(photoURL),
+        Image.network(photoURL),
         MyChipLabel(color: Colors.orange.shade300, label: wins),
         MyChipLabel(color: Colors.green.shade300, label: counts)
       ],

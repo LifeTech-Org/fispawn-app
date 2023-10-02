@@ -26,7 +26,7 @@ class Waiting extends StatelessWidget {
             ? AsyncButtonWithDialog(
                 isDanger: false,
                 text: 'Start Fispawn',
-                action: () => server.addNewSession(fis.id),
+                action: () => server.startNewSession(fis.id),
                 dialogContent:
                     'Do you want to start? People wont be able to join again.',
                 dialogActionText: 'Start now',

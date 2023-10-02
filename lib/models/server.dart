@@ -11,7 +11,7 @@ import 'package:web_socket_channel/io.dart';
 class ServerRepo implements Server {
   static const isLocalhost = true;
   static const api = isLocalhost
-      ? "http://192.168.41.206:3001"
+      ? "http://192.168.194.206:3001"
       : 'https://fispawn-server-rithoimkwa-uc.a.run.app';
 
   // @override
@@ -102,7 +102,7 @@ class ServerRepo implements Server {
   // }
 
   @override
-  Future<void> addNewSession(String fisid) async {
+  Future<void> startNewSession(String fisid) async {
     try {
       final idToken = await getIdToken();
       if (idToken == null) return Future.error('User Error');
@@ -160,7 +160,8 @@ class ServerRepo implements Server {
 
       if (idToken == null) return Future.error('User Error');
       await http.put(Uri.parse('$api/fisstatus'),
-          body: jsonEncode({"fisid": fisid, "status": status}),
+          body:
+              jsonEncode({"fisid": fisid, "status": fisStatusToString(status)}),
           headers: {
             "Authorization": 'Bearer $idToken',
             'Content-Type': 'application/json'
@@ -247,6 +248,6 @@ class ServerRepo implements Server {
   IOWebSocketChannel socket(Map<String, String>? queries) {
     String parsedQueries = queries == null ? "" : parseQueries(queries);
     return IOWebSocketChannel.connect(
-        Uri.parse("ws://192.168.41.206:3001/connect?$parsedQueries"));
+        Uri.parse("ws://192.168.194.206:3001/connect?$parsedQueries"));
   }
 }
